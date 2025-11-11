@@ -6,28 +6,26 @@
  */
 
 export async function register() {
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
-    console.log('[Instrumentation] Starting server initialisation...');
+  // Only run on server (not edge runtime)
+  if (process.env.NEXT_RUNTIME === 'edge') {
+    return;
+  }
 
-    // Load word list cache on startup
-    const { wordListProvider } = await import('./lib/anagram');
+  // Load word list cache on startup
+  const { wordListProvider } = await import('./lib/anagram');
 
-    try {
-      console.log('[Instrumentation] Loading word list cache...');
-      await wordListProvider.load();
+  try {
+    await wordListProvider.load();
 
-      const stats = wordListProvider.getStats();
-      if (stats) {
-        console.log(
-          `[Instrumentation] ✓ Word list loaded successfully:\n` +
-          `  - Total words: ${stats.totalWords.toLocaleString()}\n` +
-          `  - Unique signatures: ${stats.uniqueSignatures.toLocaleString()}\n` +
-          `  - Source: ${stats.source}`
-        );
-      }
-    } catch (error) {
-      console.error('[Instrumentation] ✗ Failed to load word list:', error);
-      // Don't throw - let the app start, but search will fail gracefully
+    const stats = wordListProvider.getStats();
+    if (stats) {
+      console.log(
+        `✓ Word list loaded: ${stats.totalWords.toLocaleString()} words, ` +
+        `${stats.uniqueSignatures.toLocaleString()} unique signatures`
+      );
     }
+  } catch (error) {
+    console.error('✗ Failed to load word list:', error);
+    // Don't throw - let the app start, but search will fail gracefully
   }
 }

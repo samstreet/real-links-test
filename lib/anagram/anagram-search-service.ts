@@ -16,7 +16,7 @@ import type {
 import { SortOrder } from '@/types/anagram.types';
 import type { AsyncResult, ApiError } from '@/types/api.types';
 import { wordListProvider } from './word-list-provider';
-import { generateSignature, isValidInput, normalise } from './word-normaliser';
+import { generateSignature, normalise } from './word-normaliser';
 
 /**
  * Anagram Search Service Implementation

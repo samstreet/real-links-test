@@ -8,6 +8,7 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ["@heroui/react"],
+    instrumentationHook: true,
   },
   images: {
     formats: ["image/avif", "image/webp"],

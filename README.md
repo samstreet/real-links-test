@@ -1,12 +1,107 @@
-# Real Links Code Challenge
+# Real Links Code Challenge - Anagram Finder
 
-Thank you for your interest in a position with the Engineering team at Real Links!
+This is a completed implementation of the Real Links coding challenge: a modern anagram finder web application.
 
-In this repository, you will find the skeleton of a web application written in Vue.js for finding anagrams of a given input.
+## Tech Stack
 
-Your task is to complete an application by implementing the functionality described in the User Story below. Even though the skeleton uses Vue.js you can use any framework. In fact we encourage you to use Next.js given we have just recently updated our stack from Vue to Next.
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript (strict mode)
+- **UI Library**: HeroUI (Hero UI)
+- **Authentication**: NextAuth.js with Gmail OAuth 2.0
+- **Testing**: Vitest
+- **Node.js**: 22+ required
 
-Please clone the repository and [email a link to your completed project to the Engineering team](mailto:marton.takacs@reallinks.io).
+## Features
+
+- Gmail OAuth authentication
+- Real-time anagram search with debouncing
+- O(1) HashMap-based lookup for optimal performance
+- In-memory word list cache (~370k words)
+- WCAG 2.1 Level AA accessibility compliance
+- Clean, minimal responsive design
+- Dark mode support
+- Comprehensive unit tests
+
+## Setup Instructions
+
+### Prerequisites
+
+- Node.js 22 or higher
+- Gmail account for OAuth
+- Google Cloud Console project with OAuth 2.0 credentials
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Configure Environment Variables
+
+Create a `.env` file in the root directory:
+
+```bash
+# NextAuth Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-here
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your-client-id
+GOOGLE_CLIENT_SECRET=your-client-secret
+
+# Word List Source
+WORD_LIST_URL=https://raw.githubusercontent.com/dwyl/english-words/master/words.txt
+
+# Runtime
+NEXT_RUNTIME=nodejs
+```
+
+To generate a secure `NEXTAUTH_SECRET`, run:
+```bash
+openssl rand -base64 32
+```
+
+### 3. Run Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### 4. Run Tests
+
+```bash
+npm test
+```
+
+### 5. Build for Production
+
+```bash
+npm run build
+npm start
+```
+
+## Usage
+
+1. Visit the application and click "Sign in with Google"
+2. Authenticate with your Gmail account
+3. Enter a word or phrase in the search field
+4. View matching anagrams in real-time
+
+## Project Structure
+
+- `/app` - Next.js App Router pages and API routes
+- `/lib` - Core business logic and services
+- `/types` - TypeScript type definitions
+- `/docs` - Project documentation and planning
+
+## Documentation
+
+- `CLAUDE.md` - Development guidelines and coding standards
+- `docs/PLAN.md` - Phased development plan
+
+---
 
 ## User Story
 

@@ -54,6 +54,12 @@ export async function POST(request: NextRequest) {
     // Create search query
     const query: SearchQuery = { input };
 
+    // Ensure word list is loaded (fallback in case instrumentation hasn't run yet)
+    const { wordListProvider } = await import('@/lib/anagram');
+    if (!wordListProvider.isLoaded()) {
+      await wordListProvider.load();
+    }
+
     // Perform search
     const result = await anagramSearchService.search(query, options);
 
