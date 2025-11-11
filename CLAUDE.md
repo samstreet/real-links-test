@@ -109,6 +109,58 @@ Must meet WCAG 2.1 Level AA standards:
 - Use strict mode
 - Define proper types for props, API responses, and domain models
 - Avoid `any` types
+- **Use enums for fixed sets of values** instead of string literal unions
+- **Use British English spelling** for all code (normalise, initialise, etc.)
+
+### TypeScript Enums
+
+**Rule**: Always use TypeScript enums for fixed sets of values instead of string literal unions.
+
+**Why**:
+- Better type safety and autocompletion
+- Easier refactoring (change value in one place)
+- Runtime value access
+- More maintainable code
+
+**Examples**:
+
+❌ **Don't** use string literal unions:
+```typescript
+type Status = 'idle' | 'loading' | 'success' | 'error';
+```
+
+✅ **Do** use enums:
+```typescript
+enum Status {
+  Idle = 'idle',
+  Loading = 'loading',
+  Success = 'success',
+  Error = 'error',
+}
+```
+
+**When to use enums**:
+- Status values (loading states, cache states, search states)
+- Sort orders (alphabetical, length, confidence)
+- Error types (validation, authentication, server errors)
+- Any fixed set of string or numeric constants
+
+**Naming**:
+- Enum names: PascalCase (e.g., `CacheStatus`, `SortOrder`)
+- Enum members: PascalCase (e.g., `Status.Idle`, `SortOrder.Alphabetical`)
+- Use British English (e.g., `CacheStatus.Uninitialised`)
+
+### British English
+
+**Rule**: Use British English spelling throughout the codebase.
+
+**Examples**:
+- `normalise` not `normalize`
+- `initialise` not `initialize`
+- `colour` not `color`
+- `favourite` not `favorite`
+- File names: `word-normaliser.ts` not `word-normalizer.ts`
+- Enums: `CacheStatus.Uninitialised` not `CacheStatus.Uninitialized`
 
 ## Running the Current Skeleton
 

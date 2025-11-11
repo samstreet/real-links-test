@@ -14,6 +14,13 @@ export {
   wordListProvider
 } from './word-list-provider';
 
+// Anagram search service
+export {
+  AnagramSearchService,
+  createAnagramSearchService,
+  anagramSearchService
+} from './anagram-search-service';
+
 // Cache
 export { wordListCache, CacheStatus } from './word-list-cache';
 export type { WordListCacheState } from './word-list-cache';

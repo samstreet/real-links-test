@@ -80,14 +80,24 @@ export interface WordListStats {
 }
 
 /**
+ * Search error type enum
+ */
+export enum SearchErrorType {
+  InvalidInput = 'INVALID_INPUT',
+  WordListNotLoaded = 'WORD_LIST_NOT_LOADED',
+  SearchTimeout = 'SEARCH_TIMEOUT',
+  UnknownError = 'UNKNOWN_ERROR',
+}
+
+/**
  * Search error types
  * Discriminated union for type-safe error handling
  */
 export type SearchError =
-  | { readonly type: 'INVALID_INPUT'; readonly message: string }
-  | { readonly type: 'WORD_LIST_NOT_LOADED'; readonly message: string }
-  | { readonly type: 'SEARCH_TIMEOUT'; readonly message: string }
-  | { readonly type: 'UNKNOWN_ERROR'; readonly message: string; readonly error?: unknown };
+  | { readonly type: SearchErrorType.InvalidInput; readonly message: string }
+  | { readonly type: SearchErrorType.WordListNotLoaded; readonly message: string }
+  | { readonly type: SearchErrorType.SearchTimeout; readonly message: string }
+  | { readonly type: SearchErrorType.UnknownError; readonly message: string; readonly error?: unknown };
 
 /**
  * Search result wrapper
@@ -106,20 +116,36 @@ export type WordListLoadResult =
   | { readonly success: false; readonly error: SearchError };
 
 /**
+ * Search status enum
+ */
+export enum SearchStatus {
+  Idle = 'idle',
+  Loading = 'loading',
+  Searching = 'searching',
+  Success = 'success',
+  Error = 'error',
+}
+
+/**
  * Search state
  * Represents the current state of a search operation
  */
 export type SearchState =
-  | { readonly status: 'idle' }
-  | { readonly status: 'loading' }
-  | { readonly status: 'searching' }
-  | { readonly status: 'success'; readonly result: AnagramResult }
-  | { readonly status: 'error'; readonly error: SearchError };
+  | { readonly status: SearchStatus.Idle }
+  | { readonly status: SearchStatus.Loading }
+  | { readonly status: SearchStatus.Searching }
+  | { readonly status: SearchStatus.Success; readonly result: AnagramResult }
+  | { readonly status: SearchStatus.Error; readonly error: SearchError };
 
 /**
- * Sort order for results
+ * Sort order enum for results
  */
-export type SortOrder = 'alphabetical' | 'length' | 'confidence' | 'original-first';
+export enum SortOrder {
+  Alphabetical = 'alphabetical',
+  Length = 'length',
+  Confidence = 'confidence',
+  OriginalFirst = 'original-first',
+}
 
 /**
  * Search options
