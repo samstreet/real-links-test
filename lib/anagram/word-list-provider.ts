@@ -5,11 +5,11 @@
  * Provides access to the word list cache following SOLID principles
  */
 
-import type { IWordListProvider } from '@/types/services.types';
-import type { Word, WordListStats } from '@/types/anagram.types';
-import type { AsyncResult, ApiError } from '@/types/api.types';
-import { wordListCache, CacheStatus } from './word-list-cache';
-import { getWordListUrl } from '../config';
+import type { IWordListProvider } from "@/types/services.types";
+import type { Word, WordListStats } from "@/types/anagram.types";
+import type { AsyncResult, ApiError } from "@/types/api.types";
+import { wordListCache, CacheStatus } from "./word-list-cache";
+import { getWordListUrl } from "../config";
 
 /**
  * Word List Provider Implementation
@@ -33,29 +33,29 @@ export class WordListProvider implements IWordListProvider {
         return {
           success: false,
           error: {
-            code: 'SERVICE_UNAVAILABLE',
-            message: state.error || 'Failed to load word list',
+            code: "SERVICE_UNAVAILABLE",
+            message: state.error || "Failed to load word list",
             statusCode: 503,
             timestamp: new Date().toISOString(),
-          }
+          },
         };
       }
 
       // Return empty array as placeholder - actual words are in cache
       return {
         success: true,
-        data: []
+        data: [],
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
+      const message = error instanceof Error ? error.message : "Unknown error";
       return {
         success: false,
         error: {
-          code: 'INTERNAL_ERROR',
+          code: "INTERNAL_ERROR",
           message,
           statusCode: 500,
           timestamp: new Date().toISOString(),
-        }
+        },
       };
     }
   }
@@ -102,16 +102,6 @@ export class WordListProvider implements IWordListProvider {
   }
 
   /**
-   * Gets all words matching a specific character signature
-   *
-   * @param signature - The normalised, sorted character signature
-   * @returns Array of words with matching signature (empty if not found)
-   */
-  getWordsBySignature(signature: string): readonly string[] {
-    return wordListCache.findBySignature(signature);
-  }
-
-  /**
    * Gets the current loading status
    */
   getStatus(): CacheStatus {
@@ -128,7 +118,15 @@ export function createWordListProvider(): IWordListProvider {
 }
 
 /**
- * Singleton instance for convenient access
- * Use this in application code when DI is not needed
+ * Singleton instance with global persistence
  */
-export const wordListProvider = new WordListProvider();
+let wordListProviderInstance: WordListProvider | null = null;
+
+function getWordListProvider(): WordListProvider {
+  if (!wordListProviderInstance) {
+    wordListProviderInstance = new WordListProvider();
+  }
+  return wordListProviderInstance;
+}
+
+export const wordListProvider = getWordListProvider();

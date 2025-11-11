@@ -5,18 +5,18 @@
  * Provides anagram search functionality using the word list cache
  */
 
-import type { IAnagramSearchService } from '@/types/services.types';
+import type { IAnagramSearchService } from "@/types/services.types";
 import type {
   SearchQuery,
   SearchOptions,
   AnagramResult,
   AnagramMatch,
   WordListStats,
-} from '@/types/anagram.types';
-import { SortOrder } from '@/types/anagram.types';
-import type { AsyncResult, ApiError } from '@/types/api.types';
-import { wordListProvider } from './word-list-provider';
-import { generateSignature, normalise } from './word-normaliser';
+} from "@/types/anagram.types";
+import { SortOrder } from "@/types/anagram.types";
+import type { AsyncResult, ApiError } from "@/types/api.types";
+import { generateSignature, normalise } from "./word-normaliser";
+import { wordListCache, CacheStatus } from "./word-list-cache";
 
 /**
  * Anagram Search Service Implementation
@@ -42,12 +42,13 @@ export class AnagramSearchService implements IAnagramSearchService {
 
     try {
       // Validate that word list is loaded
-      if (!wordListProvider.isLoaded()) {
+      if (!wordListCache.isLoaded()) {
         return {
           success: false,
           error: {
-            code: 'SERVICE_UNAVAILABLE',
-            message: 'Word list is not loaded yet. Please try again in a moment.',
+            code: "SERVICE_UNAVAILABLE",
+            message:
+              "Word list is not loaded yet. Please try again in a moment.",
             statusCode: 503,
             timestamp: new Date().toISOString(),
           },
@@ -80,8 +81,8 @@ export class AnagramSearchService implements IAnagramSearchService {
         return {
           success: false,
           error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Input must contain at least one alphanumeric character',
+            code: "VALIDATION_ERROR",
+            message: "Input must contain at least one alphanumeric character",
             statusCode: 400,
             timestamp: new Date().toISOString(),
           },
@@ -89,12 +90,12 @@ export class AnagramSearchService implements IAnagramSearchService {
       }
 
       // Get matches from cache (O(1) lookup)
-      const words = wordListProvider.getWordsBySignature(signature);
+      const cachedWords = wordListCache.findBySignature(signature);
 
-      // Build matches array
-      let matches: AnagramMatch[] = Array.from(words).map((word) => ({
-        word,
-        isOriginalInput: normalise(word) === normalisedInput,
+      // Build matches array using pre-normalized data
+      let matches: AnagramMatch[] = cachedWords.map((cachedWord) => ({
+        word: cachedWord.word,
+        isOriginalInput: cachedWord.normalized === normalisedInput,
         confidence: 1.0, // All HashMap matches are 100% confident
       }));
 
@@ -102,7 +103,9 @@ export class AnagramSearchService implements IAnagramSearchService {
       if (options) {
         // Filter by minimum word length
         if (options.minWordLength !== undefined && options.minWordLength > 0) {
-          matches = matches.filter((m) => m.word.length >= options.minWordLength!);
+          matches = matches.filter(
+            (m) => m.word.length >= options.minWordLength!
+          );
         }
 
         // Exclude original if requested
@@ -134,13 +137,13 @@ export class AnagramSearchService implements IAnagramSearchService {
         },
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[AnagramSearchService] Search error:', error);
+      const message = error instanceof Error ? error.message : "Unknown error";
+      console.error("[AnagramSearchService] Search error:", error);
 
       return {
         success: false,
         error: {
-          code: 'INTERNAL_ERROR',
+          code: "INTERNAL_ERROR",
           message: `Search failed: ${message}`,
           statusCode: 500,
           timestamp: new Date().toISOString(),
@@ -153,20 +156,33 @@ export class AnagramSearchService implements IAnagramSearchService {
    * Check if the service is ready to perform searches
    */
   isReady(): boolean {
-    return wordListProvider.isLoaded();
+    return wordListCache.isLoaded();
   }
 
   /**
    * Get statistics about the loaded word list
    */
   getStats(): WordListStats | null {
-    return wordListProvider.getStats();
+    const state = wordListCache.getState();
+    return state.status === CacheStatus.Loaded
+      ? {
+          totalWords: state.wordCount,
+          uniqueSignatures: state.signatureCount,
+          averageWordLength: 0, // TODO: Calculate average word length
+          loadedAt: new Date(),
+          source:
+            "https://raw.githubusercontent.com/dwyl/english-words/master/words.txt",
+        }
+      : null;
   }
 
   /**
    * Sort matches according to the specified order
    */
-  private sortMatches(matches: AnagramMatch[], sortOrder: SortOrder): AnagramMatch[] {
+  private sortMatches(
+    matches: AnagramMatch[],
+    sortOrder: SortOrder
+  ): AnagramMatch[] {
     const sorted = [...matches];
 
     switch (sortOrder) {

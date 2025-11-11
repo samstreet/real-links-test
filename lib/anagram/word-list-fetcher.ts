@@ -5,7 +5,7 @@
  * Uses configuration from environment variables
  */
 
-import { getConfig } from '../config';
+import { getConfig } from "../config";
 
 export interface FetchWordListResult {
   success: boolean;
@@ -27,38 +27,38 @@ export async function fetchWordList(): Promise<FetchWordListResult> {
     console.log(`[WordList] Fetching word list from ${url}...`);
     const startTime = Date.now();
 
-    const response = await fetch(url, {
-      // Cache based on config
-      next: { revalidate: config.wordList.cacheRevalidate }
-    });
+    const response = await fetch(url);
 
     if (!response.ok) {
       return {
         success: false,
-        error: `Failed to fetch word list: ${response.status} ${response.statusText}`
+        error: `Failed to fetch word list: ${response.status} ${response.statusText}`,
       };
     }
 
     const text = await response.text();
     const words = text
-      .split('\n')
-      .map(word => word.trim())
-      .filter(word => word.length > 0);
+      .split("\n")
+      .map((word) => word.trim())
+      .filter((word) => word.length > 0);
 
     const duration = Date.now() - startTime;
-    console.log(`[WordList] Successfully fetched ${words.length} words in ${duration}ms`);
+    console.log(
+      `[WordList] Successfully fetched ${words.length} words in ${duration}ms`
+    );
 
     return {
       success: true,
-      words
+      words,
     };
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[WordList] Error fetching word list:', errorMessage);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    console.error("[WordList] Error fetching word list:", errorMessage);
 
     return {
       success: false,
-      error: `Failed to fetch word list: ${errorMessage}`
+      error: `Failed to fetch word list: ${errorMessage}`,
     };
   }
 }

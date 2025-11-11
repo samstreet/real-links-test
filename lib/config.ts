@@ -8,7 +8,6 @@
 export interface AppConfig {
   wordList: {
     url: string;
-    cacheRevalidate: number; // seconds
   };
   auth: {
     nextAuthUrl: string;
@@ -26,16 +25,17 @@ export interface AppConfig {
 export function loadConfig(): AppConfig {
   return {
     wordList: {
-      url: process.env.WORD_LIST_URL || 'https://raw.githubusercontent.com/dwyl/english-words/master/words.txt',
-      cacheRevalidate: 86400, // 24 hours
+      url:
+        process.env.WORD_LIST_URL ||
+        "https://raw.githubusercontent.com/dwyl/english-words/master/words.txt",
     },
     auth: {
-      nextAuthUrl: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-      nextAuthSecret: process.env.NEXTAUTH_SECRET || '',
-      googleClientId: process.env.GOOGLE_CLIENT_ID || '',
-      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      nextAuthUrl: process.env.NEXTAUTH_URL || "http://localhost:3000",
+      nextAuthSecret: process.env.NEXTAUTH_SECRET || "",
+      googleClientId: process.env.GOOGLE_CLIENT_ID || "",
+      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     },
-    environment: process.env.NODE_ENV || 'development',
+    environment: process.env.NODE_ENV || "development",
   };
 }
 

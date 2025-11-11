@@ -8,14 +8,19 @@
  * This enables O(1) anagram lookup by character signature
  */
 
-import { fetchWordList } from './word-list-fetcher';
-import { generateSignature } from './word-normaliser';
+import { fetchWordList } from "./word-list-fetcher";
+import { generateSignature, normalise } from "./word-normaliser";
 
 export enum CacheStatus {
-  Uninitialised = 'uninitialised',
-  Loading = 'loading',
-  Loaded = 'loaded',
-  Error = 'error',
+  Uninitialised = "uninitialised",
+  Loading = "loading",
+  Loaded = "loaded",
+  Error = "error",
+}
+
+export interface CachedWord {
+  word: string;
+  normalized: string;
 }
 
 export interface WordListCacheState {
@@ -26,17 +31,37 @@ export interface WordListCacheState {
 }
 
 /**
- * Singleton cache instance
- * Map structure: signature -> array of words with that signature
+ * Singleton cache instance with global persistence
+ * Map structure: signature -> array of cached words with that signature
  */
 class WordListCache {
-  private cache: Map<string, string[]> | null = null;
+  private cache: Map<string, CachedWord[]> | null = null;
   private state: WordListCacheState = {
     status: CacheStatus.Uninitialised,
     wordCount: 0,
     signatureCount: 0,
   };
   private loadPromise: Promise<void> | null = null;
+
+  constructor() {
+    // Try to restore from global state if available
+    if (typeof global !== "undefined" && (global as any).__wordListCacheState) {
+      const globalState = (global as any).__wordListCacheState;
+      this.state = globalState.state;
+      this.cache = globalState.cache;
+      this.loadPromise = globalState.loadPromise;
+    }
+  }
+
+  private saveToGlobal() {
+    if (typeof global !== "undefined") {
+      (global as any).__wordListCacheState = {
+        state: this.state,
+        cache: this.cache,
+        loadPromise: this.loadPromise,
+      };
+    }
+  }
 
   /**
    * Gets the current cache state
@@ -69,11 +94,12 @@ class WordListCache {
 
     // Start loading
     this.loadPromise = this.performLoad();
+    this.saveToGlobal();
     return this.loadPromise;
   }
 
   /**
-   * Internal method to perform the actual loading
+   * Builds the signature HashMap with pre-normalized words
    */
   private async performLoad(): Promise<void> {
     try {
@@ -83,33 +109,34 @@ class WordListCache {
         signatureCount: 0,
       };
 
-      console.log('[WordListCache] Starting to load word list...');
+      console.log("[WordListCache] Starting to load word list...");
       const startTime = Date.now();
 
       // Fetch the word list
       const result = await fetchWordList();
 
       if (!result.success || !result.words) {
-        throw new Error(result.error || 'Failed to fetch word list');
+        throw new Error(result.error || "Failed to fetch word list");
       }
 
-      // Build the signature HashMap
-      const signatureMap = new Map<string, string[]>();
+      // Build the signature HashMap with normalized word data
+      const signatureMap = new Map<string, CachedWord[]>();
 
       for (const word of result.words) {
-        const signature = generateSignature(word);
+        const normalized = normalise(word);
+        const signature = generateSignature(normalized);
 
         // Skip if signature is empty (word had no alphanumeric characters)
         if (signature.length === 0) {
           continue;
         }
 
-        // Add word to the signature bucket
+        // Add normalized word data to the signature bucket
         const existing = signatureMap.get(signature);
         if (existing) {
-          existing.push(word);
+          existing.push({ word, normalized });
         } else {
-          signatureMap.set(signature, [word]);
+          signatureMap.set(signature, [{ word, normalized }]);
         }
       }
 
@@ -126,13 +153,16 @@ class WordListCache {
         signatureCount,
       };
 
+      this.saveToGlobal();
+
       console.log(
         `[WordListCache] Successfully loaded ${wordCount} words ` +
-        `into ${signatureCount} signature buckets in ${duration}ms`
+          `into ${signatureCount} signature buckets in ${duration}ms`
       );
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('[WordListCache] Error loading word list:', errorMessage);
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("[WordListCache] Error loading word list:", errorMessage);
 
       this.state = {
         status: CacheStatus.Error,
@@ -150,9 +180,9 @@ class WordListCache {
    * Returns empty array if signature not found or cache not loaded
    *
    * @param signature - The character signature to look up
-   * @returns Array of words matching the signature
+   * @returns Array of cached words matching the signature
    */
-  findBySignature(signature: string): readonly string[] {
+  findBySignature(signature: string): readonly CachedWord[] {
     if (!this.isLoaded() || !this.cache) {
       return [];
     }
@@ -182,16 +212,21 @@ class WordListCache {
       wordCount: 0,
       signatureCount: 0,
     };
+    this.saveToGlobal();
   }
 }
 
 /**
- * Singleton instance - persists in Node.js module cache
- * This stays in memory across requests
+ * Singleton instance with global persistence
+ * This ensures the cache persists across Next.js contexts
  */
-const wordListCache = new WordListCache();
+let wordListCacheInstance: WordListCache | null = null;
 
-/**
- * Export the singleton instance
- */
-export { wordListCache };
+function getWordListCache(): WordListCache {
+  if (!wordListCacheInstance) {
+    wordListCacheInstance = new WordListCache();
+  }
+  return wordListCacheInstance;
+}
+
+export const wordListCache = getWordListCache();
